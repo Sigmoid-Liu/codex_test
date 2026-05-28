@@ -2,12 +2,17 @@ let holdings = [];
 let portfolio = null;
 let selectedSymbol = null;
 let chart = null;
+let analyzeOnStartup = false;
 
 const storageKey = "portfolio-watch-holdings";
-const defaultHoldings = [
+const legacyDefaultHoldings = JSON.stringify([
   { symbol: "300857", name: "协创数据", shares: 400, costBasis: 254 },
   { symbol: "002487", name: "大金重工", shares: 1000, costBasis: 75 }
-];
+]);
+
+function blankHolding() {
+  return { symbol: "", name: "", shares: "", costBasis: "" };
+}
 
 const els = {
   refreshBtn: document.querySelector("#refreshBtn"),
@@ -113,6 +118,10 @@ function readHoldingsFromForm() {
     .filter((item) => item.symbol);
 }
 
+function hasCompleteHoldings(value) {
+  return value.some((item) => item.symbol && Number(item.shares) > 0 && Number(item.costBasis) >= 0);
+}
+
 function saveHoldings() {
   localStorage.setItem(storageKey, JSON.stringify(holdings));
 }
@@ -130,17 +139,28 @@ function renderHoldingRows() {
     row.innerHTML = `
       <input name="symbol" autocomplete="off" placeholder="300857 / AAPL" value="${escapeHtml(holding.symbol)}" required>
       <input name="name" autocomplete="off" placeholder="可选" value="${escapeHtml(holding.name)}">
-      <input name="shares" type="number" min="0" step="0.01" value="${Number.isFinite(holding.shares) ? holding.shares : ""}" required>
-      <input name="costBasis" type="number" min="0" step="0.001" value="${Number.isFinite(holding.costBasis) ? holding.costBasis : ""}" required>
+      <input name="shares" type="number" min="0" step="0.01" value="${Number.isFinite(Number(holding.shares)) && holding.shares !== "" ? holding.shares : ""}" required>
+      <input name="costBasis" type="number" min="0" step="0.001" value="${Number.isFinite(Number(holding.costBasis)) && holding.costBasis !== "" ? holding.costBasis : ""}" required>
       <button class="remove-button" type="button" title="删除" aria-label="删除">×</button>
     `;
     row.querySelector(".remove-button").addEventListener("click", () => {
       holdings.splice(index, 1);
-      if (!holdings.length) holdings.push({ symbol: "", name: "", shares: 0, costBasis: 0 });
+      if (!holdings.length) holdings.push(blankHolding());
       renderHoldingRows();
     });
     els.holdingRows.append(row);
   });
+}
+
+function clearSummary() {
+  els.totalMarketValue.textContent = "--";
+  els.totalPnl.textContent = "--";
+  els.totalPnl.className = "";
+  els.worstDrawdown.textContent = "--";
+  els.worstDrawdown.className = "";
+  els.generatedAt.textContent = "--";
+  els.positionCount.textContent = "0";
+  els.positions.innerHTML = "";
 }
 
 function setSummary(data) {
@@ -307,6 +327,11 @@ async function analyzePortfolio() {
 
 async function sharePortfolio() {
   holdings = readHoldingsFromForm();
+  if (!holdings.length) {
+    setStatus("请先填写持仓后再分享", "error");
+    return;
+  }
+
   const url = new URL(window.location.href);
   url.searchParams.set("h", encodeHoldings(holdings));
   const shareUrl = url.toString();
@@ -327,6 +352,7 @@ function initHoldings() {
     if (shared) {
       holdings = decodeHoldings(shared).map(normalizeHolding);
       localStorage.setItem(storageKey, JSON.stringify(holdings));
+      analyzeOnStartup = hasCompleteHoldings(holdings);
       return;
     }
   } catch {
@@ -334,17 +360,23 @@ function initHoldings() {
   }
 
   try {
-    holdings = JSON.parse(localStorage.getItem(storageKey) || "null") || defaultHoldings;
+    const stored = localStorage.getItem(storageKey);
+    if (stored && stored !== legacyDefaultHoldings) {
+      holdings = JSON.parse(stored).map(normalizeHolding);
+      analyzeOnStartup = hasCompleteHoldings(holdings);
+    } else {
+      holdings = [blankHolding()];
+      analyzeOnStartup = false;
+    }
   } catch {
-    holdings = defaultHoldings;
+    holdings = [blankHolding()];
+    analyzeOnStartup = false;
   }
-
-  holdings = holdings.map(normalizeHolding);
 }
 
 els.addHoldingBtn.addEventListener("click", () => {
   holdings = readHoldingsFromForm();
-  holdings.push({ symbol: "", name: "", shares: 0, costBasis: 0 });
+  holdings.push(blankHolding());
   renderHoldingRows();
 });
 
@@ -358,5 +390,10 @@ els.shareBtn.addEventListener("click", sharePortfolio);
 
 initHoldings();
 renderHoldingRows();
+clearSummary();
 clearDetail();
-analyzePortfolio();
+if (analyzeOnStartup) {
+  analyzePortfolio();
+} else {
+  setStatus("填写持仓后点击更新分析");
+}
