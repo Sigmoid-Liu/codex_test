@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>持仓监控</title>
+    <link rel="stylesheet" href="/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js" defer></script>
+    <script src="/app.js" defer></script>
+  </head>
+  <body>
+    <main class="shell">
+      <section class="topbar">
+        <div>
+          <p class="eyebrow">Portfolio Watch</p>
+          <h1>持仓股监控</h1>
+        </div>
+        <div class="top-actions">
+          <button id="shareBtn" class="text-button" type="button">分享</button>
+          <button id="refreshBtn" class="icon-button" title="立即刷新" aria-label="立即刷新" type="button">
+            <span>↻</span>
+          </button>
+        </div>
+      </section>
+
+      <section class="input-panel">
+        <div class="panel-head compact">
+          <h2>我的持仓</h2>
+          <button id="addHoldingBtn" class="text-button" type="button">添加</button>
+        </div>
+        <form id="holdingsForm" class="holdings-form">
+          <div class="form-grid form-labels" aria-hidden="true">
+            <span>代码</span>
+            <span>名称</span>
+            <span>股数</span>
+            <span>成本价</span>
+            <span></span>
+          </div>
+          <div id="holdingRows" class="holding-rows"></div>
+          <div class="form-actions">
+            <button id="analyzeBtn" class="primary-button" type="submit">更新分析</button>
+            <span id="formStatus" class="form-status"></span>
+          </div>
+        </form>
+      </section>
+
+      <section class="summary-grid" aria-label="组合摘要">
+        <article class="metric">
+          <span>总市值</span>
+          <strong id="totalMarketValue">--</strong>
+        </article>
+        <article class="metric">
+          <span>总盈亏</span>
+          <strong id="totalPnl">--</strong>
+        </article>
+        <article class="metric">
+          <span>最深回撤</span>
+          <strong id="worstDrawdown">--</strong>
+        </article>
+        <article class="metric">
+          <span>更新时间</span>
+          <strong id="generatedAt">--</strong>
+        </article>
+      </section>
+
+      <section class="workspace">
+        <aside class="positions-panel">
+          <div class="panel-head">
+            <h2>持仓</h2>
+            <span id="positionCount">0</span>
+          </div>
+          <div id="positions" class="positions"></div>
+        </aside>
+
+        <section class="detail-panel">
+          <div class="detail-head">
+            <div>
+              <p id="selectedName" class="eyebrow">--</p>
+              <h2 id="selectedSymbol">选择一只股票</h2>
+            </div>
+            <div class="price-block">
+              <span id="selectedPrice">--</span>
+              <small id="selectedChange">--</small>
+            </div>
+          </div>
+
+          <div class="chart-wrap">
+            <canvas id="priceChart" aria-label="一年价格走势"></canvas>
+          </div>
+
+          <div class="risk-strip">
+            <div>
+              <span>最大回撤</span>
+              <strong id="selectedDrawdown">--</strong>
+            </div>
+            <div>
+              <span>回撤区间</span>
+              <strong id="selectedDrawdownRange">--</strong>
+            </div>
+            <div>
+              <span>持仓盈亏</span>
+              <strong id="selectedPnl">--</strong>
+            </div>
+          </div>
+
+          <div class="news-head">
+            <h2>最新资讯</h2>
+          </div>
+          <div id="news" class="news-list"></div>
+        </section>
+      </section>
+    </main>
+  </body>
+</html>

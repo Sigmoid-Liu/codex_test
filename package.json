@@ -1,0 +1,16 @@
+{
+  "name": "portfolio-watch",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Daily portfolio risk and news monitor.",
+  "type": "module",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "check": "node --check src/server.js"
+  },
+  "dependencies": {},
+  "engines": {
+    "node": ">=18"
+  }
+}
